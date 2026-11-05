@@ -1,99 +1,268 @@
 <div class="pagina">
   <header class="cabecalho">
-    <div>
-      <span class="subtitulo">CALENDARIOBRASIL WEB</span>
-      <h1>Consulta de feriados</h1>
-      <p>Consulte feriados nacionais e estaduais de qualquer ano suportado.</p>
+    <div class="marca">
+      <span class="logo">CB</span>
+      <div>
+        <strong>CalendarioBrasil</strong>
+        <small>Consulta de feriados nacionais e estaduais</small>
+      </div>
     </div>
-    <span class="versao">Angular 22 · .NET 10</span>
+
+    <button type="button" class="botao botao-secundario" disabled
+      title="Integração com Databricks será implementada em uma etapa futura">
+      Databricks · Em breve
+    </button>
   </header>
 
   <main>
-    <section class="painel pesquisa">
-      <div class="campo">
+    <section class="titulo-pagina">
+      <div>
+        <span class="subtitulo">CALENDÁRIO ANUAL</span>
+        <h1>Feriados do Brasil</h1>
+        <p>Explore os feriados de qualquer ano e compare diferentes estados.</p>
+      </div>
+
+      <div class="navegacao-ano">
+        <button type="button" class="botao" aria-label="Ano anterior"
+          [disabled]="ano() <= 1583" (click)="navegarAno(-1)">‹</button>
+
         <label for="ano">Ano</label>
         <input id="ano" type="number" min="1583" max="9999"
           [value]="ano()" (change)="alterarAno($event)">
-      </div>
 
-      <div class="campo">
-        <label for="ufs">Unidades federativas</label>
-        <input id="ufs" type="text" placeholder="Ex.: RJ,SP,MG"
-          [value]="ufsSelecionadas().join(',')"
-          (change)="alterarUfs($event)">
-        <small>Deixe em branco para consultar somente os feriados nacionais.</small>
-      </div>
+        <button type="button" class="botao" aria-label="Próximo ano"
+          [disabled]="ano() >= 9999" (click)="navegarAno(1)">›</button>
 
-      <button type="button" (click)="limparUfs()">Limpar UFs</button>
+        <button type="button" class="botao botao-secundario" (click)="voltarAnoAtual()">Ano atual</button>
+      </div>
     </section>
 
-    @if (erroFormulario()) {
-      <p class="mensagem erro" role="alert">{{ erroFormulario() }}</p>
+    @if (erroFormulario(); as mensagem) {
+      <p class="mensagem erro" role="alert">{{ mensagem }}</p>
     }
 
-    @if (carregando()) {
-      <p class="mensagem" role="status">Consultando os feriados...</p>
-    }
+    <div class="layout">
+      <aside class="barra-lateral">
+        <section class="painel">
+          <div class="painel-titulo">
+            <h2>Unidades federativas</h2>
+            <span class="contador">{{ ufsSelecionadas().length }}</span>
+          </div>
 
-    @if (erro()) {
-      <div class="mensagem erro" role="alert">
-        <span>{{ erro() }}</span>
-        <button type="button" (click)="consultarNovamente()">Tentar novamente</button>
-      </div>
-    }
+          <p class="texto-auxiliar">Selecione uma ou várias UFs.</p>
 
-    @if (resultado(); as dados) {
-      <section class="painel resumo">
-        <div>
-          <span>ANO CONSULTADO</span>
-          <strong>{{ dados.ano }}</strong>
-        </div>
-        <div>
-          <span>FERIADOS ENCONTRADOS</span>
-          <strong>{{ dados.total }}</strong>
-        </div>
-        <div>
-          <span>COBERTURA</span>
-          <strong>{{ dados.cobertura }}</strong>
-        </div>
-        <div>
-          <span>UFs</span>
-          <strong>{{ dados.ufs.length ? dados.ufs.join(', ') : 'Brasil' }}</strong>
-        </div>
-      </section>
+          <label class="rotulo" for="pesquisa-uf">Pesquisar estado</label>
+          <input id="pesquisa-uf" class="campo-pesquisa" type="search"
+            placeholder="Ex.: Rio de Janeiro"
+            [value]="pesquisaUf()" (input)="alterarPesquisaUf($event)">
 
-      <section class="painel">
-        <h2>Feriados encontrados</h2>
+          <div class="acoes-ufs">
+            <button type="button" (click)="selecionarTodasUfs()">Selecionar todas</button>
+            <button type="button" (click)="limparUfs()" [disabled]="ufsSelecionadas().length === 0">Limpar</button>
+          </div>
 
-        <div class="lista-feriados">
-          @for (feriado of dados.feriados; track feriado.codigo + feriado.data + (feriado.uf ?? 'BR')) {
-            <article class="feriado">
-              <div class="data">{{ formatarData(feriado.data) }}</div>
+          <div class="lista-ufs">
+            @for (estado of estadosFiltrados(); track estado.sigla) {
+              <label class="opcao-uf">
+                <input type="checkbox"
+                  [checked]="ufsSelecionadas().includes(estado.sigla)"
+                  (change)="alternarUf(estado.sigla)">
+                <span class="sigla">{{ estado.sigla }}</span>
+                <span>{{ estado.nome }}</span>
+              </label>
+            } @empty {
+              <p class="texto-auxiliar">Nenhuma UF encontrada.</p>
+            }
+          </div>
+        </section>
 
-              <div class="descricao">
-                <strong>{{ feriado.nome }}</strong>
-                <small>{{ feriado.fundamentoLegal }}</small>
-              </div>
+        <section class="painel">
+          <h2>Filtrar feriados</h2>
+          <p class="texto-auxiliar">Escolha o que deseja visualizar.</p>
 
-              <span class="tipo" [class.estadual]="feriado.abrangencia === 'Estadual'">
-                {{ feriado.uf ?? 'Nacional' }}
-              </span>
-            </article>
-          } @empty {
-            <p>Nenhum feriado encontrado para esta consulta.</p>
-          }
-        </div>
-      </section>
+          <div class="filtros">
+            <button type="button" [class.ativo]="filtro() === 'todos'"
+              [attr.aria-pressed]="filtro() === 'todos'"
+              (click)="alterarFiltro('todos')">
+              Todos
+            </button>
 
-      @if (dados.limitacoes.length > 0) {
-        <section class="painel avisos">
-          <h2>Informações sobre a cobertura</h2>
+            <button type="button" [class.ativo]="filtro() === 'nacionais'"
+              [attr.aria-pressed]="filtro() === 'nacionais'"
+              (click)="alterarFiltro('nacionais')">
+              Somente nacionais
+            </button>
 
-          @for (aviso of dados.limitacoes; track $index) {
-            <p>{{ aviso }}</p>
+            <button type="button" [class.ativo]="filtro() === 'estaduais'"
+              [attr.aria-pressed]="filtro() === 'estaduais'"
+              (click)="alterarFiltro('estaduais')">
+              Somente estaduais
+            </button>
+          </div>
+
+          @if (filtro() === 'estaduais' && ufsSelecionadas().length === 0) {
+            <p class="aviso-filtro">Selecione pelo menos uma UF para visualizar feriados estaduais.</p>
           }
         </section>
-      }
-    }
+      </aside>
+
+      <section class="conteudo">
+        <section class="painel resumo">
+          <div class="resumo-titulo">
+            <div>
+              <h2>Calendário de {{ ano() }}</h2>
+              <p class="texto-auxiliar">
+                @if (ufsSelecionadas().length === 0) {
+                  Feriados nacionais do Brasil
+                } @else {
+                  Brasil + {{ ufsSelecionadas().join(', ') }}
+                }
+              </p>
+            </div>
+
+            @if (resultado(); as dados) {
+              <span class="indicador-cobertura">Cobertura {{ dados.cobertura }}</span>
+            }
+          </div>
+
+          <div class="indicadores">
+            <div>
+              <span>Nacionais</span>
+              <strong>{{ totalNacionais() }}</strong>
+            </div>
+            <div>
+              <span>Estaduais</span>
+              <strong>{{ totalEstaduais() }}</strong>
+            </div>
+            <div>
+              <span>Exibidos</span>
+              <strong>{{ feriadosExibidos().length }}</strong>
+            </div>
+          </div>
+        </section>
+
+        @if (carregando()) {
+          <div class="mensagem carregando" role="status">
+            Carregando feriados da API...
+          </div>
+        }
+
+        @if (erro(); as mensagem) {
+          <div class="mensagem erro" role="alert">
+            <span>{{ mensagem }}</span>
+            <button type="button" class="botao" (click)="consultarNovamente()">Tentar novamente</button>
+          </div>
+        }
+
+        @if (resultado(); as dados) {
+          @if (ufsSelecionadas().length > 0) {
+            <p class="mensagem projecao">
+              Os feriados estaduais são calculados com base nas regras cadastradas e podem sofrer alterações legais.
+            </p>
+          }
+
+          @if (dados.limitacoes.length > 0) {
+            <details class="painel avisos">
+              <summary>Avisos de cobertura e projeções ({{ dados.limitacoes.length }})</summary>
+              <ul>
+                @for (aviso of dados.limitacoes; track $index) {
+                  <li>{{ aviso }}</li>
+                }
+              </ul>
+            </details>
+          }
+
+          <div class="legenda">
+            <span><i class="ponto nacional"></i> Nacional</span>
+            <span><i class="ponto estadual"></i> Estadual</span>
+            <span><i class="marcacao-hoje"></i> Hoje</span>
+          </div>
+
+          <div class="grade-meses">
+            @for (mes of meses(); track mes.indice) {
+              <section class="mes">
+                <h3>{{ mes.nome }}</h3>
+
+                <div class="dias-semana">
+                  @for (nome of diasSemana; track nome) {
+                    <span>{{ nome }}</span>
+                  }
+                </div>
+
+                <div class="dias-mes">
+                  @for (dia of mes.dias; track $index) {
+                    @if (dia; as data) {
+                      <button type="button" class="dia"
+                        [class.dia-hoje]="data.iso === hojeIso"
+                        [class.com-feriado]="(feriadosPorData().get(data.iso)?.length ?? 0) > 0"
+                        [class.selecionado]="dataSelecionada() === data.iso"
+                        [attr.aria-pressed]="dataSelecionada() === data.iso"
+                        [attr.aria-label]="'Selecionar ' + formatarData(data.iso)"
+                        (click)="selecionarDia(data.iso)">
+                        <span>{{ data.numero }}</span>
+
+                        <span class="marcadores">
+                          @for (feriado of (feriadosPorData().get(data.iso) ?? []).slice(0, 3); track feriado.codigo + (feriado.uf ?? 'BR')) {
+                            <i class="ponto"
+                              [class.nacional]="feriado.abrangencia === 'Nacional'"
+                              [class.estadual]="feriado.abrangencia === 'Estadual'"></i>
+                          }
+                        </span>
+                      </button>
+                    } @else {
+                      <span class="dia-vazio"></span>
+                    }
+                  }
+                </div>
+              </section>
+            }
+          </div>
+
+          @if (dataSelecionada(); as data) {
+            <section class="painel detalhes">
+              <div class="painel-titulo">
+                <h2>Feriados em {{ formatarData(data) }}</h2>
+                <button type="button" class="botao botao-secundario"
+                  (click)="dataSelecionada.set(null)">Fechar</button>
+              </div>
+
+              @for (feriado of feriadosDaDataSelecionada(); track feriado.codigo + (feriado.uf ?? 'BR')) {
+                <article class="feriado-detalhe">
+                  <span class="tipo" [class.estadual]="feriado.abrangencia === 'Estadual'">
+                    {{ feriado.uf ?? 'Nacional' }}
+                  </span>
+
+                  <div>
+                    <h3>{{ feriado.nome }}</h3>
+                    <p>{{ feriado.fundamentoLegal }}</p>
+
+                    @if (feriado.transferido && feriado.dataOriginal) {
+                      <p>Data original: {{ formatarData(feriado.dataOriginal) }}</p>
+                    }
+
+                    @if (feriado.situacaoData === 'PendenteConfirmacao') {
+                      <p class="pendente">Data pendente de confirmação.</p>
+                    }
+                  </div>
+                </article>
+              } @empty {
+                <p class="texto-auxiliar">Nenhum feriado corresponde ao filtro nesta data.</p>
+              }
+            </section>
+          }
+
+          @if (feriadosExibidos().length === 0) {
+            <p class="mensagem">
+              Nenhum feriado corresponde às UFs e ao filtro selecionados.
+            </p>
+          }
+        }
+      </section>
+    </div>
   </main>
+
+  <footer class="rodape">
+    CalendarioBrasil — Datas calculadas conforme as regras cadastradas.
+    Consulte a legislação aplicável para uso oficial.
+  </footer>
 </div>
