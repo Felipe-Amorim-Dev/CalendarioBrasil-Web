@@ -28,3 +28,5 @@ export interface CalendarioFeriados {
   limitacoes: string[];
   alertas: AlertaCalendario[];
 }
+
+export type FiltroFeriado = 'todos' | 'nacionais' | 'estaduais';

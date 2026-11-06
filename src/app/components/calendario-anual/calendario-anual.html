@@ -1,0 +1,45 @@
+<div class="legenda">
+  <span><i class="ponto nacional"></i> Nacional</span>
+  <span><i class="ponto estadual"></i> Estadual</span>
+  <span><i class="marcacao-hoje"></i> Hoje</span>
+</div>
+
+<div class="grade-meses">
+  @for (mes of meses(); track mes.indice) {
+    <section class="mes">
+      <h3>{{ mes.nome }}</h3>
+
+      <div class="dias-semana">
+        @for (nome of diasSemana; track nome) {
+          <span>{{ nome }}</span>
+        }
+      </div>
+
+      <div class="dias-mes">
+        @for (dia of mes.dias; track $index) {
+          @if (dia; as data) {
+            <button type="button" class="dia"
+              [class.dia-hoje]="data.iso === hojeIso()"
+              [class.com-feriado]="(feriadosPorData().get(data.iso)?.length ?? 0) > 0"
+              [class.selecionado]="dataSelecionada() === data.iso"
+              [attr.aria-pressed]="dataSelecionada() === data.iso"
+              [attr.aria-label]="'Selecionar ' + formatarData(data.iso)"
+              (click)="selecionarDia(data.iso)">
+              <span>{{ data.numero }}</span>
+
+              <span class="marcadores">
+                @for (feriado of (feriadosPorData().get(data.iso) ?? []).slice(0, 3); track feriado.codigo + (feriado.uf ?? 'BR')) {
+                  <i class="ponto"
+                    [class.nacional]="feriado.abrangencia === 'Nacional'"
+                    [class.estadual]="feriado.abrangencia === 'Estadual'"></i>
+                }
+              </span>
+            </button>
+          } @else {
+            <span class="dia-vazio"></span>
+          }
+        }
+      </div>
+    </section>
+  }
+</div>

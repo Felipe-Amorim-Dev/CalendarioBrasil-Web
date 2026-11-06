@@ -1,0 +1,29 @@
+<section class="painel">
+  <div class="cabecalho">
+    <h2>Feriados em {{ formatarData(data()) }}</h2>
+    <button type="button" (click)="fechar.emit()">Fechar</button>
+  </div>
+
+  @for (feriado of feriados(); track feriado.codigo + (feriado.uf ?? 'BR')) {
+    <article class="feriado">
+      <span class="tipo" [class.estadual]="feriado.abrangencia === 'Estadual'">
+        {{ feriado.uf ?? 'Nacional' }}
+      </span>
+
+      <div>
+        <h3>{{ feriado.nome }}</h3>
+        <p>{{ feriado.fundamentoLegal }}</p>
+
+        @if (feriado.transferido && feriado.dataOriginal) {
+          <p>Data original: {{ formatarData(feriado.dataOriginal) }}</p>
+        }
+
+        @if (feriado.situacaoData === 'PendenteConfirmacao') {
+          <p class="pendente">Data pendente de confirmação.</p>
+        }
+      </div>
+    </article>
+  } @empty {
+    <p class="vazio">Nenhum feriado corresponde ao filtro nesta data.</p>
+  }
+</section>

@@ -1,0 +1,53 @@
+<section class="painel">
+  <div class="cabecalho-painel">
+    <h2>Unidades federativas</h2>
+    <span class="contador">{{ selecionadas().length }}</span>
+  </div>
+
+  <p class="texto-auxiliar">Selecione uma ou várias UFs.</p>
+
+  <label for="pesquisa-uf">Pesquisar estado</label>
+  <input id="pesquisa-uf" type="search" placeholder="Nome ou sigla"
+    [value]="pesquisa()" (input)="atualizarPesquisa($event)">
+
+  <div class="acoes">
+    <button type="button" (click)="selecionarTodas()">Selecionar todas</button>
+    <button type="button" (click)="limpar()" [disabled]="selecionadas().length === 0">Limpar</button>
+  </div>
+
+  <div class="lista-ufs">
+    @for (estado of estadosFiltrados(); track estado.sigla) {
+      <label class="opcao-uf">
+        <input type="checkbox" [checked]="selecionadas().includes(estado.sigla)"
+          (change)="alternarUf(estado.sigla)">
+        <strong>{{ estado.sigla }}</strong>
+        <span>{{ estado.nome }}</span>
+      </label>
+    } @empty {
+      <p class="texto-auxiliar">Nenhuma UF encontrada.</p>
+    }
+  </div>
+</section>
+
+<section class="painel">
+  <h2>Filtrar feriados</h2>
+  <p class="texto-auxiliar">Escolha quais feriados visualizar.</p>
+
+  <div class="filtros">
+    <button type="button" [class.ativo]="filtro() === 'todos'"
+      [attr.aria-pressed]="filtro() === 'todos'"
+      (click)="selecionarFiltro('todos')">Todos</button>
+
+    <button type="button" [class.ativo]="filtro() === 'nacionais'"
+      [attr.aria-pressed]="filtro() === 'nacionais'"
+      (click)="selecionarFiltro('nacionais')">Somente nacionais</button>
+
+    <button type="button" [class.ativo]="filtro() === 'estaduais'"
+      [attr.aria-pressed]="filtro() === 'estaduais'"
+      (click)="selecionarFiltro('estaduais')">Somente estaduais</button>
+  </div>
+
+  @if (filtro() === 'estaduais' && selecionadas().length === 0) {
+    <p class="aviso">Selecione pelo menos uma UF para visualizar os feriados estaduais.</p>
+  }
+</section>
