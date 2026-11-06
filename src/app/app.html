@@ -8,11 +8,15 @@
       </div>
     </div>
 
-    <button type="button" class="botao botao-secundario" disabled
-      title="Integração Databricks prevista para uma próxima etapa">
-      Databricks · Em breve
+    <button type="button" class="botao botao-secundario" [attr.aria-expanded]="mostrarDatabricks()"
+      (click)="alternarDatabricks()">
+      Databricks
     </button>
   </header>
+
+  @if (mostrarDatabricks()) {
+  <app-databricks-panel (fechar)="alternarDatabricks()" />
+  }
 
   <main>
     <section class="titulo-pagina">
@@ -23,30 +27,26 @@
       </div>
 
       <div class="navegacao-ano">
-        <button type="button" class="botao" aria-label="Ano anterior"
-          [disabled]="ano() <= 1583" (click)="navegarAno(-1)">‹</button>
+        <button type="button" class="botao" aria-label="Ano anterior" [disabled]="ano() <= 1583"
+          (click)="navegarAno(-1)">‹</button>
 
         <label for="ano">Ano</label>
-        <input id="ano" type="number" min="1583" max="9999"
-          [value]="ano()" (change)="alterarAno($event)">
+        <input id="ano" type="number" min="1583" max="9999" [value]="ano()" (change)="alterarAno($event)">
 
-        <button type="button" class="botao" aria-label="Próximo ano"
-          [disabled]="ano() >= 9999" (click)="navegarAno(1)">›</button>
+        <button type="button" class="botao" aria-label="Próximo ano" [disabled]="ano() >= 9999"
+          (click)="navegarAno(1)">›</button>
 
         <button type="button" class="botao botao-secundario" (click)="voltarAnoAtual()">Ano atual</button>
       </div>
     </section>
 
     @if (erroFormulario(); as mensagem) {
-      <p class="mensagem erro" role="alert">{{ mensagem }}</p>
+    <p class="mensagem erro" role="alert">{{ mensagem }}</p>
     }
 
     <div class="layout">
       <aside class="barra-lateral">
-        <app-filtros-feriados
-          [selecionadas]="ufsSelecionadas()"
-          [filtro]="filtro()"
-          (alterouUfs)="atualizarUfs($event)"
+        <app-filtros-feriados [selecionadas]="ufsSelecionadas()" [filtro]="filtro()" (alterouUfs)="atualizarUfs($event)"
           (alterouFiltro)="atualizarFiltro($event)" />
       </aside>
 
@@ -57,15 +57,15 @@
               <h2>Calendário de {{ ano() }}</h2>
               <p class="texto-auxiliar">
                 @if (ufsSelecionadas().length === 0) {
-                  Feriados nacionais do Brasil
+                Feriados nacionais do Brasil
                 } @else {
-                  Brasil + {{ ufsSelecionadas().join(', ') }}
+                Brasil + {{ ufsSelecionadas().join(', ') }}
                 }
               </p>
             </div>
 
             @if (resultado(); as dados) {
-              <span class="indicador-cobertura">Cobertura {{ dados.cobertura }}</span>
+            <span class="indicador-cobertura">Cobertura {{ dados.cobertura }}</span>
             }
           </div>
 
@@ -88,51 +88,45 @@
         </section>
 
         @if (carregando()) {
-          <p class="mensagem" role="status">Carregando feriados da API...</p>
+        <p class="mensagem" role="status">Carregando feriados da API...</p>
         }
 
         @if (erro(); as mensagem) {
-          <div class="mensagem erro" role="alert">
-            <span>{{ mensagem }}</span>
-            <button type="button" class="botao" (click)="consultarNovamente()">Tentar novamente</button>
-          </div>
+        <div class="mensagem erro" role="alert">
+          <span>{{ mensagem }}</span>
+          <button type="button" class="botao" (click)="consultarNovamente()">Tentar novamente</button>
+        </div>
         }
 
         @if (resultado(); as dados) {
-          @if (ufsSelecionadas().length > 0) {
-            <p class="mensagem projecao">
-              Os feriados estaduais são calculados a partir das regras cadastradas e podem sofrer alterações legais.
-            </p>
-          }
+        @if (ufsSelecionadas().length > 0) {
+        <p class="mensagem projecao">
+          Os feriados estaduais são calculados a partir das regras cadastradas e podem sofrer alterações legais.
+        </p>
+        }
 
-          @if (dados.limitacoes.length > 0) {
-            <details class="painel avisos">
-              <summary>Avisos de cobertura e projeções ({{ dados.limitacoes.length }})</summary>
-              <ul>
-                @for (aviso of dados.limitacoes; track $index) {
-                  <li>{{ aviso }}</li>
-                }
-              </ul>
-            </details>
-          }
+        @if (dados.limitacoes.length > 0) {
+        <details class="painel avisos">
+          <summary>Avisos de cobertura e projeções ({{ dados.limitacoes.length }})</summary>
+          <ul>
+            @for (aviso of dados.limitacoes; track $index) {
+            <li>{{ aviso }}</li>
+            }
+          </ul>
+        </details>
+        }
 
-          <app-calendario-anual
-            [ano]="ano()"
-            [hojeIso]="hojeIso"
-            [feriados]="feriadosExibidos()"
-            [dataSelecionada]="dataSelecionada()"
-            (selecionouData)="selecionarDia($event)" />
+        <app-calendario-anual [ano]="ano()" [hojeIso]="hojeIso" [feriados]="feriadosExibidos()"
+          [dataSelecionada]="dataSelecionada()" (selecionouData)="selecionarDia($event)" />
 
-          @if (dataSelecionada(); as data) {
-            <app-detalhes-feriados
-              [data]="data"
-              [feriados]="feriadosDaDataSelecionada()"
-              (fechar)="dataSelecionada.set(null)" />
-          }
+        @if (dataSelecionada(); as data) {
+        <app-detalhes-feriados [data]="data" [feriados]="feriadosDaDataSelecionada()"
+          (fechar)="dataSelecionada.set(null)" />
+        }
 
-          @if (feriadosExibidos().length === 0) {
-            <p class="mensagem vazio">Nenhum feriado corresponde às UFs e ao filtro selecionados.</p>
-          }
+        @if (feriadosExibidos().length === 0) {
+        <p class="mensagem vazio">Nenhum feriado corresponde às UFs e ao filtro selecionados.</p>
+        }
         }
       </section>
     </div>

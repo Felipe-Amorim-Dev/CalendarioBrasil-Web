@@ -1,0 +1,67 @@
+<section class="painel-databricks" aria-labelledby="titulo-databricks">
+  <div class="cabecalho">
+    <div>
+      <span class="subtitulo">INTEGRAÇÕES</span>
+      <h2 id="titulo-databricks">Databricks</h2>
+      <p>Conexão entre a API CalendarioBrasil e o workspace Databricks.</p>
+    </div>
+
+    <button type="button" class="botao-secundario" (click)="fecharPainel()">
+      Fechar
+    </button>
+  </div>
+
+  @if (carregando()) {
+    <p class="mensagem" role="status">Verificando configuração...</p>
+  }
+
+  @if (erro(); as mensagem) {
+    <p class="mensagem erro" role="alert">{{ mensagem }}</p>
+    <button type="button" class="botao-secundario" (click)="consultarStatus()">
+      Tentar novamente
+    </button>
+  }
+
+  @if (status(); as dados) {
+    <div class="estado">
+      <span class="indicador" [class.configurado]="dados.configurado"></span>
+
+      <div>
+        <strong>{{ dados.configurado ? 'Credenciais configuradas' : 'Não configurado' }}</strong>
+        <p>{{ dados.mensagem }}</p>
+      </div>
+    </div>
+
+    <div class="acoes">
+      @if (dados.testeDisponivel) {
+        <button type="button" class="botao-principal"
+          [disabled]="!dados.configurado || testando()"
+          (click)="testarConexao()">
+          {{ testando() ? 'Testando conexão...' : 'Testar conexão' }}
+        </button>
+      } @else {
+        <p class="observacao">
+          O teste de conexão está disponível somente no ambiente de desenvolvimento.
+        </p>
+      }
+
+      <button type="button" class="botao-secundario"
+        [disabled]="carregando() || testando()"
+        (click)="consultarStatus()">
+        Atualizar status
+      </button>
+    </div>
+  }
+
+  @if (resultadoTeste(); as teste) {
+    <div class="resultado" [class.falha]="!teste.conectado" role="status">
+      <strong>{{ teste.conectado ? 'Conexão validada' : 'Falha na conexão' }}</strong>
+      <p>{{ teste.mensagem }}</p>
+    </div>
+  }
+
+  <p class="seguranca">
+    As credenciais ficam armazenadas exclusivamente no backend. O front-end não recebe
+    tokens nem segredos do workspace.
+  </p>
+</section>

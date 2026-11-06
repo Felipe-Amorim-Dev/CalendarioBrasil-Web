@@ -5,11 +5,12 @@ import { DetalhesFeriados } from './components/detalhes-feriados/detalhes-feriad
 import { FiltrosFeriados } from './components/filtros-feriados/filtros-feriados';
 import { CalendarioFeriados, FiltroFeriado } from './core/models/calendario.model';
 import { CalendarioService } from './core/services/calendario.service';
+import { DatabricksPanel } from './components/databricks-panel/databricks-panel';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CalendarioAnual, DetalhesFeriados, FiltrosFeriados],
+  imports: [CalendarioAnual, DatabricksPanel, DetalhesFeriados, FiltrosFeriados],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -51,6 +52,8 @@ export class App {
     const data = this.dataSelecionada();
     return data ? this.feriadosExibidos().filter(feriado => feriado.data === data) : [];
   });
+
+  readonly mostrarDatabricks = signal(false);
 
   constructor() {
     effect(onCleanup => {
@@ -133,5 +136,9 @@ export class App {
   private obterHojeIso(): string {
     const hoje = new Date();
     return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+  }
+
+  alternarDatabricks(): void {
+    this.mostrarDatabricks.update(valor => !valor);
   }
 }
