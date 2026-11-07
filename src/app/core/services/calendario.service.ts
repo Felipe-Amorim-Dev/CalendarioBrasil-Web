@@ -1,14 +1,15 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { CalendarioFeriados } from '../models/calendario.model';
-import { HttpClient, HttpParams } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CalendarioService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/v1/feriados';
+  private readonly apiUrl = `${environment.apiBaseUrl}/feriados`;
 
   consultar(ano: number, ufs: readonly string[] = []): Observable<CalendarioFeriados> {
     let params = new HttpParams().set('ano', ano.toString());

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { DatabricksStatus, DatabricksTeste } from '../models/databricks.model';
 
 @Injectable({
@@ -8,7 +9,7 @@ import { DatabricksStatus, DatabricksTeste } from '../models/databricks.model';
 })
 export class DatabricksService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/v1/databricks';
+  private readonly apiUrl = `${environment.apiBaseUrl}/databricks`;
 
   obterStatus(): Observable<DatabricksStatus> {
     return this.http.get<DatabricksStatus>(`${this.apiUrl}/status`);
