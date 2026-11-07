@@ -1,3 +1,5 @@
+<img src="doc/Calendário Brasil_ Banner.png" alt="Capa" width="1920px" align="center">
+
 # CalendarioBrasil-Web
 
 Interface web para consulta e visualização de feriados nacionais e estaduais brasileiros, desenvolvida em **Angular 22**, TypeScript e SCSS, com integração à API CalendarioBrasil em .NET 10.
