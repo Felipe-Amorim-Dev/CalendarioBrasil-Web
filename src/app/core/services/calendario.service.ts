@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, retry, throwError, timer, timeout, TimeoutError } from 'rxjs';
+import { map, Observable, retry, switchMap, throwError, timer, timeout, TimeoutError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CalendarioFeriados } from '../models/calendario.model';
 
@@ -10,6 +10,7 @@ import { CalendarioFeriados } from '../models/calendario.model';
 export class CalendarioService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiBaseUrl}/feriados`;
+  private readonly healthUrl = '/health';
 
   consultar(ano: number, ufs: readonly string[] = []): Observable<CalendarioFeriados> {
     let params = new HttpParams().set('ano', ano.toString());
@@ -18,21 +19,29 @@ export class CalendarioService {
       params = params.set('uf', ufs.join(','));
     }
 
-    return this.http.get<CalendarioFeriados>(this.apiUrl, { params }).pipe(
-      timeout({ first: 25000 }),
+    return this.http.get<{ status: string }>(this.healthUrl).pipe(
+      timeout({ first: 15000 }),
+      map(resposta => {
+        if (resposta.status !== 'healthy') {
+          throw new HttpErrorResponse({ status: 503, statusText: 'API em inicialização' });
+        }
+      }),
+      switchMap(() => this.http.get<CalendarioFeriados>(this.apiUrl, { params }).pipe(
+        timeout({ first: 20000 })
+      )),
       retry({
-        count: 8,
+        count: 12,
         delay: (erro: unknown) => {
           if (erro instanceof TimeoutError) {
-            return timer(7000);
+            return timer(5000);
           }
 
           if (erro instanceof HttpErrorResponse) {
-            const indisponivel = [0, 502, 503, 504].includes(erro.status);
-            const respostaInvalida = erro.status === 200 && erro.error?.error instanceof SyntaxError;
+            const temporario = [0, 502, 503, 504].includes(erro.status);
+            const respostaNaoJson = erro.status === 200 && erro.error?.error instanceof SyntaxError;
 
-            if (indisponivel || respostaInvalida) {
-              return timer(7000);
+            if (temporario || respostaNaoJson) {
+              return timer(5000);
             }
           }
 
