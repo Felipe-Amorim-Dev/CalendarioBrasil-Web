@@ -88,7 +88,14 @@
         </section>
 
         @if (carregando()) {
-        <p class="mensagem" role="status">Carregando feriados da API...</p>
+        <div class="mensagem" role="status" aria-live="polite">
+          <strong>Carregando feriados...</strong>
+          <p>
+            Estamos consultando a API CalendarioBrasil.
+            Caso o servidor esteja em repouso, a inicialização pode levar
+            aproximadamente um minuto ou mais. A consulta será repetida automaticamente.
+          </p>
+        </div>
         }
 
         @if (erro(); as mensagem) {
@@ -116,7 +123,7 @@
         </details>
         }
 
-        <app-calendario-anual [ano]="ano()" [hojeIso]="hojeIso" [feriados]="feriadosExibidos()" />        
+        <app-calendario-anual [ano]="ano()" [hojeIso]="hojeIso" [feriados]="feriadosExibidos()" />
 
         @if (feriadosExibidos().length === 0) {
         <p class="mensagem vazio">Nenhum feriado corresponde às UFs e ao filtro selecionados.</p>
