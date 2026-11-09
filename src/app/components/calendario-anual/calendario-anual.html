@@ -21,14 +21,17 @@
             <button type="button" class="dia"
               [class.dia-hoje]="data.iso === hojeIso()"
               [class.com-feriado]="(feriadosPorData().get(data.iso)?.length ?? 0) > 0"
-              [class.selecionado]="dataSelecionada() === data.iso"
-              [attr.aria-pressed]="dataSelecionada() === data.iso"
-              [attr.aria-label]="'Selecionar ' + formatarData(data.iso)"
-              (click)="selecionarDia(data.iso)">
+              [attr.aria-label]="'Dia ' + formatarData(data.iso)"
+              [attr.aria-describedby]="balao()?.data === data.iso && feriadosDoBalao().length ? 'tooltip-feriados' : null"
+              (mouseenter)="abrirBalao($event, data.iso)"
+              (mouseleave)="agendarFechamento()"
+              (focus)="abrirBalao($event, data.iso)"
+              (blur)="agendarFechamento()"
+              (click)="clicarDia($event, data.iso)">
               <span>{{ data.numero }}</span>
 
-              <span class="marcadores">
-                @for (feriado of (feriadosPorData().get(data.iso) ?? []).slice(0, 3); track feriado.codigo + (feriado.uf ?? 'BR')) {
+              <span class="marcadores" aria-hidden="true">
+                @for (feriado of (feriadosPorData().get(data.iso) ?? []).slice(0, 3); track feriado.codigo + (feriado.uf ?? 'BR') + $index) {
                   <i class="ponto"
                     [class.nacional]="feriado.abrangencia === 'Nacional'"
                     [class.estadual]="feriado.abrangencia === 'Estadual'"></i>
@@ -43,3 +46,43 @@
     </section>
   }
 </div>
+
+@if (balao(); as info) {
+  @if (feriadosDoBalao().length > 0) {
+    <div id="tooltip-feriados" class="balao-feriados" role="tooltip"
+      [class.acima]="info.acima"
+      [style.top.px]="info.top"
+      [style.left.px]="info.left"
+      [style.width.px]="info.width"
+      [style.max-height.px]="info.maxHeight"
+      (mouseenter)="cancelarFechamento()"
+      (mouseleave)="agendarFechamento()">
+
+      <div class="balao-cabecalho">
+        <strong>{{ formatarData(info.data) }}</strong>
+        <span>{{ feriadosDoBalao().length }} feriado(s)</span>
+      </div>
+
+      <div class="balao-conteudo">
+        @for (feriado of feriadosDoBalao(); track feriado.codigo + (feriado.uf ?? 'BR') + $index) {
+          <article class="balao-item">
+            <span class="balao-tipo" [class.estadual]="feriado.abrangencia === 'Estadual'">
+              {{ feriado.abrangencia === 'Nacional' ? 'Nacional' : 'Estadual · ' + feriado.uf }}
+            </span>
+
+            <h4>{{ feriado.nome }}</h4>
+            <p class="fundamento">{{ feriado.fundamentoLegal }}</p>
+
+            @if (feriado.transferido && feriado.dataOriginal) {
+              <p class="informacao">Data original: {{ formatarData(feriado.dataOriginal) }}</p>
+            }
+
+            @if (feriado.situacaoData === 'PendenteConfirmacao') {
+              <p class="pendente">Data pendente de confirmação.</p>
+            }
+          </article>
+        }
+      </div>
+    </div>
+  }
+}

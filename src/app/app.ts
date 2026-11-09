@@ -1,7 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CalendarioAnual } from './components/calendario-anual/calendario-anual';
-import { DetalhesFeriados } from './components/detalhes-feriados/detalhes-feriados';
 import { FiltrosFeriados } from './components/filtros-feriados/filtros-feriados';
 import { CalendarioFeriados, FiltroFeriado } from './core/models/calendario.model';
 import { CalendarioService } from './core/services/calendario.service';
@@ -10,7 +9,7 @@ import { DatabricksPanel } from './components/databricks-panel/databricks-panel'
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CalendarioAnual, DatabricksPanel, DetalhesFeriados, FiltrosFeriados],
+  imports: [CalendarioAnual, DatabricksPanel, FiltrosFeriados],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -28,8 +27,7 @@ export class App {
   readonly resultado = signal<CalendarioFeriados | null>(null);
   readonly carregando = signal(true);
   readonly erro = signal<string | null>(null);
-  readonly erroFormulario = signal<string | null>(null);
-  readonly dataSelecionada = signal<string | null>(null);
+  readonly erroFormulario = signal<string | null>(null);  
 
   readonly totalNacionais = computed(() => (this.resultado()?.feriados ?? []).filter(feriado => feriado.abrangencia === 'Nacional').length);
   readonly totalEstaduais = computed(() => (this.resultado()?.feriados ?? []).filter(feriado => feriado.abrangencia === 'Estadual').length);
@@ -46,12 +44,7 @@ export class App {
     }
 
     return feriados;
-  });
-
-  readonly feriadosDaDataSelecionada = computed(() => {
-    const data = this.dataSelecionada();
-    return data ? this.feriadosExibidos().filter(feriado => feriado.data === data) : [];
-  });
+  });  
 
   readonly mostrarDatabricks = signal(false);
 
@@ -93,8 +86,7 @@ export class App {
       return;
     }
 
-    this.erroFormulario.set(null);
-    this.dataSelecionada.set(null);
+    this.erroFormulario.set(null);    
     this.ano.set(novoAno);
   }
 
@@ -106,28 +98,21 @@ export class App {
     }
 
     this.erroFormulario.set(null);
-    this.dataSelecionada.set(null);
     this.ano.set(novoAno);
   }
 
   voltarAnoAtual(): void {
-    this.erroFormulario.set(null);
-    this.dataSelecionada.set(null);
+    this.erroFormulario.set(null);    
     this.ano.set(this.anoAtual);
   }
 
-  atualizarUfs(ufs: string[]): void {
-    this.dataSelecionada.set(null);
+  atualizarUfs(ufs: string[]): void {    
     this.ufsSelecionadas.set([...ufs].sort());
   }
 
   atualizarFiltro(filtro: FiltroFeriado): void {
     this.filtro.set(filtro);
-  }
-
-  selecionarDia(data: string): void {
-    this.dataSelecionada.set(this.dataSelecionada() === data ? null : data);
-  }
+  } 
 
   consultarNovamente(): void {
     this.recarregamentos.update(valor => valor + 1);

@@ -116,13 +116,7 @@
         </details>
         }
 
-        <app-calendario-anual [ano]="ano()" [hojeIso]="hojeIso" [feriados]="feriadosExibidos()"
-          [dataSelecionada]="dataSelecionada()" (selecionouData)="selecionarDia($event)" />
-
-        @if (dataSelecionada(); as data) {
-        <app-detalhes-feriados [data]="data" [feriados]="feriadosDaDataSelecionada()"
-          (fechar)="dataSelecionada.set(null)" />
-        }
+        <app-calendario-anual [ano]="ano()" [hojeIso]="hojeIso" [feriados]="feriadosExibidos()" />        
 
         @if (feriadosExibidos().length === 0) {
         <p class="mensagem vazio">Nenhum feriado corresponde às UFs e ao filtro selecionados.</p>
